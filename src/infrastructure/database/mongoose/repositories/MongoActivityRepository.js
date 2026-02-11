@@ -50,11 +50,16 @@ class MongoActivityRepository extends IActivityRepository {
   }
 
   async update(id, activityData) {
+    console.log('🔍 MONGO - Atualizando atividade ID:', id);
+    console.log('🔍 MONGO - Dados para atualizar:', activityData);
+    
     const activityDoc = await ActivityModel.findByIdAndUpdate(
       id,
       activityData,
       { new: true }
     );
+
+    console.log('🔍 MONGO - Documento atualizado:', activityDoc);
 
     if (!activityDoc) return null;
 
