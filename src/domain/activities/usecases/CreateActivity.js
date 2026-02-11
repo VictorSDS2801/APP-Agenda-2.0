@@ -1,33 +1,37 @@
-const Activity = require("../entities/Activity")
+const Activity = require('../entities/Activity');
 
 class CreateActivity {
-    constructor(activityRepository) {
-        this.activityRepository = activityRepository
+  constructor(activityRepository) {
+    this.activityRepository = activityRepository;
+  }
+
+  async execute({ subject, description, issueDate, dueDate }) {
+    // Validações
+    if (!subject || !description || !issueDate || !dueDate) {
+      throw new Error('All fields are required');
     }
 
-    async execute({ subject, description, issueDate, dueDate }) {
-        if (!subject || !description || !issueDate || !dueDate) {
-            throw new Error("All fields are required")
-        }
+    // Converter para Date UTC mantendo o dia correto
+    const issue = new Date(issueDate + 'T00:00:00.000Z');
+    const due = new Date(dueDate + 'T00:00:00.000Z');
 
-        const issue = new Date(issueDate)
-        const due = new Date(dueDate)
-
-        if (issue > due) {
-            throw new Error("Issue date cannot be after due date")
-        }
-
-        const activity = new Activity({
-            subject,
-            description,
-            issueDate: issue,
-            dueDate: due
-        })
-
-        const createdActivity = await this.activityRepository.create(activity)
-        
-        return createdActivity
+    if (issue > due) {
+      throw new Error('Issue date cannot be after due date');
     }
+
+    // Criar entidade
+    const activity = new Activity({
+      subject,
+      description,
+      issueDate: issue,
+      dueDate: due
+    });
+
+    // Salvar
+    const createdActivity = await this.activityRepository.create(activity);
+
+    return createdActivity;
+  }
 }
 
-module.exports = CreateActivity
+module.exports = CreateActivity;
