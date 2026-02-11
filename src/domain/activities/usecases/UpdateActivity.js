@@ -10,22 +10,31 @@ class UpdateActivity {
       throw new Error('Activity not found');
     }
 
-    // Validar datas se forem fornecidas
-    if (issueDate && dueDate) {
-      const issue = new Date(issueDate + 'T00:00:00.000Z');
-      const due = new Date(dueDate + 'T00:00:00.000Z');
+    // Converter strings de data para Date objects (só se forem fornecidas)
+    let issue = existingActivity.issueDate;
+    let due = existingActivity.dueDate;
 
-      if (issue > due) {
-        throw new Error('Issue date cannot be after due date');
-      }
+    if (issueDate) {
+      // Se já tiver T no formato, usar diretamente, senão adicionar
+      issue = new Date(issueDate.includes('T') ? issueDate : issueDate + 'T00:00:00.000Z');
+    }
+
+    if (dueDate) {
+      // Se já tiver T no formato, usar diretamente, senão adicionar
+      due = new Date(dueDate.includes('T') ? dueDate : dueDate + 'T00:00:00.000Z');
+    }
+
+    // Validar datas
+    if (issueDate && dueDate && issue > due) {
+      throw new Error('Issue date cannot be after due date');
     }
 
     // Atualizar apenas os campos fornecidos
     const updatedData = {
       subject: subject || existingActivity.subject,
       description: description || existingActivity.description,
-      issueDate: issueDate ? new Date(issueDate + 'T00:00:00.000Z') : existingActivity.issueDate,
-      dueDate: dueDate ? new Date(dueDate + 'T00:00:00.000Z') : existingActivity.dueDate
+      issueDate: issue,
+      dueDate: due
     };
 
     const updatedActivity = await this.activityRepository.update(id, updatedData);
