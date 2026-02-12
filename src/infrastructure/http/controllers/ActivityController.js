@@ -34,24 +34,67 @@ class ActivityController {
 
   async list(req, res) {
     try {
-      // Query params: ?tomorrow=true ou ?startDate=2024-01-01&endDate=2024-12-31 ou ?subject=Matemática
-      const filters = {
-        tomorrow: req.query.tomorrow === 'true',
-        startDate: req.query.startDate,
-        endDate: req.query.endDate,
-        subject: req.query.subject
-      };
+      // Construir filtros
+      const filters = {};
 
-      const listActivities = new ListActivities(this.activityRepository);
-      const activities = await listActivities.execute(filters);
+      // Filtro: atividades do próximo dia
+      if (req.query.tomorrow === 'true') {
+        const now = new Date();
+        const tomorrow = new Date(Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate() + 1,
+          0, 0, 0, 0
+        ));
+        
+        const dayAfter = new Date(Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate() + 2,
+          0, 0, 0, 0
+        ));
 
-      return res.status(200).json(activities);
-    } catch (error) {
-      return res.status(400).json({
-        error: error.message
-      });
+        console.log('🔍 CONTROLLER - Filtro Tomorrow - De:', tomorrow, 'Até:', dayAfter);
+
+        filters.dueDate = {
+          $gte: tomorrow,
+          $lt: dayAfter
+        };
+      }
+
+      // Filtro: por matéria
+      if (req.query.subject) {
+        filters.subject = req.query.subject;
+      }
+
+      // Filtro: por data de início
+      if (req.query.startDate) {
+        filters.issueDate = {
+          ...filters.issueDate,
+          $gte: new Date(req.query.startDate + 'T00:00:00.000Z')
+        };
+      }
+
+      // Filtro: por data de fim
+      if (req.query.endDate) {
+        filters.dueDate = {
+          ...filters.dueDate,
+          $lte: new Date(req.query.endDate + 'T23:59:59.999Z')
+        };
     }
+
+    console.log('🔍 CONTROLLER - Filtros processados:', JSON.stringify(filters, null, 2));
+
+    const listActivities = new ListActivities(this.activityRepository);
+    const activities = await listActivities.execute(filters);
+
+    return res.status(200).json(activities);
+  } catch (error) {
+    return res.status(400).json({
+      error: error.message
+    });
   }
+}
 
   async update(req, res) {
     try {
