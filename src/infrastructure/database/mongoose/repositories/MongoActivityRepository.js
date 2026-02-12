@@ -37,7 +37,17 @@ class MongoActivityRepository extends IActivityRepository {
   }
 
   async findAll(filters = {}) {
+    console.log('🔍 MONGO findAll - Filtros recebidos:', JSON.stringify(filters, null, 2));
+    
     const activities = await ActivityModel.find(filters).sort({ dueDate: 1 });
+    
+    console.log('🔍 MONGO findAll - Quantidade encontrada:', activities.length);
+    if (activities.length > 0) {
+      console.log('🔍 MONGO findAll - Primeira atividade:', {
+        subject: activities[0].subject,
+        dueDate: activities[0].dueDate
+      });
+    }
 
     return activities.map(doc => new Activity({
       id: doc._id.toString(),
