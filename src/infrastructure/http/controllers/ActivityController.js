@@ -34,31 +34,27 @@ class ActivityController {
 
   async list(req, res) {
     try {
-      // Construir filtros
       const filters = {};
 
       // Filtro: atividades do próximo dia
       if (req.query.tomorrow === 'true') {
         const now = new Date();
-        const tomorrow = new Date(Date.UTC(
-          now.getUTCFullYear(),
-          now.getUTCMonth(),
-          now.getUTCDate() + 1,
-          0, 0, 0, 0
-        ));
-        
-        const dayAfter = new Date(Date.UTC(
-          now.getUTCFullYear(),
-          now.getUTCMonth(),
-          now.getUTCDate() + 2,
-          0, 0, 0, 0
-        ));
 
-        console.log('🔍 CONTROLLER - Filtro Tomorrow - De:', tomorrow, 'Até:', dayAfter);
+        // início de amanhã (local)
+        const tomorrowStart = new Date(now);
+        tomorrowStart.setDate(now.getDate() + 1);
+        tomorrowStart.setHours(0, 0, 0, 0);
+
+        // fim de amanhã (local)
+        const tomorrowEnd = new Date(now);
+        tomorrowEnd.setDate(now.getDate() + 1);
+        tomorrowEnd.setHours(23, 59, 59, 999);
+
+        console.log('🔍 CONTROLLER - Filtro Tomorrow - De:', tomorrowStart, 'Até:', tomorrowEnd);
 
         filters.dueDate = {
-          $gte: tomorrow,
-          $lt: dayAfter
+          $gte: tomorrowStart,
+          $lte: tomorrowEnd
         };
       }
 
@@ -81,20 +77,21 @@ class ActivityController {
           ...filters.dueDate,
           $lte: new Date(req.query.endDate + 'T23:59:59.999Z')
         };
+      }
+
+      console.log('🔍 CONTROLLER - Filtros processados:', JSON.stringify(filters, null, 2));
+
+      const listActivities = new ListActivities(this.activityRepository);
+      const activities = await listActivities.execute(filters);
+
+      return res.status(200).json(activities);
+      } catch (error) {
+        return res.status(400).json({
+          error: error.message
+        });
+      }
     }
 
-    console.log('🔍 CONTROLLER - Filtros processados:', JSON.stringify(filters, null, 2));
-
-    const listActivities = new ListActivities(this.activityRepository);
-    const activities = await listActivities.execute(filters);
-
-    return res.status(200).json(activities);
-  } catch (error) {
-    return res.status(400).json({
-      error: error.message
-    });
-  }
-}
 
   async update(req, res) {
     try {
