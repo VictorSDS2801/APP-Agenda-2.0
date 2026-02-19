@@ -13,9 +13,9 @@ class ActivityController {
     try {
       const { subject, description, issueDate, dueDate } = req.body;
 
-      // Converter para UTC
-      const issueDateUTC = new Date(issueDate);
-      const dueDateUTC = new Date(dueDate);
+      // Converter para UTC ISO
+      const issueDateUTC = new Date(issueDate).toISOString();
+      const dueDateUTC = new Date(dueDate).toISOString();
 
       const createActivity = new CreateActivity(this.activityRepository);
       const activity = await createActivity.execute({
@@ -35,6 +35,7 @@ class ActivityController {
       });
     }
   }
+
 
 
   async list(req, res) {
