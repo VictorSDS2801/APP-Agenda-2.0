@@ -13,12 +13,16 @@ class ActivityController {
     try {
       const { subject, description, issueDate, dueDate } = req.body;
 
+      // Converter para UTC
+      const issueDateUTC = new Date(issueDate);
+      const dueDateUTC = new Date(dueDate);
+
       const createActivity = new CreateActivity(this.activityRepository);
       const activity = await createActivity.execute({
         subject,
         description,
-        issueDate,
-        dueDate
+        issueDate: issueDateUTC,
+        dueDate: dueDateUTC
       });
 
       return res.status(201).json({
@@ -31,6 +35,7 @@ class ActivityController {
       });
     }
   }
+
 
   async list(req, res) {
     try {
